@@ -16,6 +16,7 @@
     "@douyinfe/semi-ui": "^2.22.3",
     "@lark-opdev/block-bitable-api": "^0.1.2",
     "@lark-plugins/core": "workspace:*",
+    "dotenv": "^16.5.0",
     "lodash-es": "^4.17.21",
     "react": "^18.2.0",
     "react-async-hook": "^4.0.0",

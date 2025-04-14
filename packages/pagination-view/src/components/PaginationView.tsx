@@ -1,13 +1,29 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAsyncCallback } from 'react-async-hook';
-import { Table, Button, Typography, Pagination, Select, Space } from '@douyinfe/semi-ui';
+import { Table, Button, Typography, Pagination, Select, Space, Toast } from '@douyinfe/semi-ui';
 import { bitable } from '@lark-opdev/block-bitable-api';
-import { Field, Record } from '@lark-plugins/core';
 import { IconRefresh } from '@douyinfe/semi-icons';
 
 const { Title } = Typography;
 const { Option } = Select;
 
+// 型定義
+interface Field {
+  id: string;
+  name: string;
+  type: string;
+  property: any;
+}
+
+interface Record {
+  recordId: string;
+  fields: { [key: string]: any };
+}
+
+/**
+ * ページネーションビューコンポーネント
+ * Larkのテーブルデータを取得し、ページネーション機能付きで表示する
+ */
 const PaginationView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [tableId, setTableId] = useState('');
@@ -17,26 +33,49 @@ const PaginationView: React.FC = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [error, setError] = useState<string | null>(null);
 
-  // 現在のテーブルとビューのIDを取得する
-  const fetchTableAndViewIds = async () => {
+  /**
+   * エラーハンドリング用のヘルパー関数
+   */
+  const handleError = useCallback((message: string, err: unknown) => {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    setError(`${message}: ${errorMessage}`);
+    Toast.error({
+      content: `${message}: ${errorMessage}`,
+      duration: 5,
+    });
+    setLoading(false);
+  }, []);
+
+  /**
+   * 現在のテーブルとビューのIDを取得する
+   */
+  const fetchTableAndViewIds = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const selection = await bitable.base.getSelection();
       if (selection.tableId) {
         setTableId(selection.tableId);
+      } else {
+        setError('テーブルが選択されていません');
+        setLoading(false);
       }
       if (selection.viewId) {
         setViewId(selection.viewId);
       }
-    } catch (error) {
-      console.error('テーブルIDの取得に失敗しました:', error);
+    } catch (err) {
+      handleError('テーブルIDの取得に失敗しました', err);
     }
-  };
+  }, [handleError]);
 
-  // フィールド情報を取得する
-  const fetchFields = async () => {
+  /**
+   * フィールド情報を取得する
+   */
+  const fetchFields = useCallback(async () => {
     if (!tableId) return;
+    setError(null);
     try {
       const table = await bitable.base.getTableById(tableId);
       const fieldMetaList = await table.getFieldMetaList();
@@ -44,59 +83,73 @@ const PaginationView: React.FC = () => {
       const fieldsData = fieldMetaList.map(field => ({
         id: field.id,
         name: field.name,
-        type: field.type as any,
+        type: String(field.type),
         property: field.property,
       }));
       
       setFields(fieldsData);
-    } catch (error) {
-      console.error('フィールド情報の取得に失敗しました:', error);
+    } catch (err) {
+      handleError('フィールド情報の取得に失敗しました', err);
     }
-  };
+  }, [tableId, handleError]);
 
-  // レコード総数を取得する
-  const fetchRecordCount = async () => {
+  /**
+   * レコード総数を取得する
+   */
+  const fetchRecordCount = useCallback(async () => {
     if (!tableId) return;
+    setError(null);
     try {
       const table = await bitable.base.getTableById(tableId);
-      const recordList = await table.getRecordList();
-      setTotalRecords(recordList.total || 0);
-    } catch (error) {
-      console.error('レコード総数の取得に失敗しました:', error);
+      // getRecordIdListを使用して総数を取得
+      const recordIds = await table.getRecordIdList();
+      setTotalRecords(recordIds.length || 0);
+    } catch (err) {
+      handleError('レコード総数の取得に失敗しました', err);
     }
-  };
+  }, [tableId, handleError]);
 
-  // ページネーション付きでレコードデータを取得する
-  const fetchRecords = async () => {
+  /**
+   * ページネーション付きでレコードデータを取得する
+   */
+  const fetchRecords = useCallback(async () => {
     if (!tableId) return;
+    setError(null);
     try {
       const table = await bitable.base.getTableById(tableId);
-      const recordList = await table.getRecordList({
-        pageSize: pageSize,
-        pageToken: (currentPage > 1) ? String(currentPage) : undefined,
-      });
+      // getRecordIdListを使用してレコードIDを取得
+      const allRecordIds = await table.getRecordIdList();
       
+      // ページネーション用にレコードIDをスライス
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, allRecordIds.length);
+      const pageRecordIds = allRecordIds.slice(startIndex, endIndex);
+      
+      // 各レコードの詳細情報を取得
       const recordsData = await Promise.all(
-        recordList.records.map(async (record) => {
-          const fields = await record.getCellValuesByFieldId();
+        pageRecordIds.map(async (recordId: string) => {
+          const record = await table.getRecordById(recordId);
+          const fieldValues = await record.getCellValuesByFieldId();
           return {
-            recordId: record.id,
-            fields,
+            recordId: recordId,
+            fields: fieldValues,
           };
         })
       );
       
       setRecords(recordsData);
       setLoading(false);
-    } catch (error) {
-      console.error('レコードデータの取得に失敗しました:', error);
-      setLoading(false);
+    } catch (err) {
+      handleError('レコードデータの取得に失敗しました', err);
     }
-  };
+  }, [tableId, pageSize, currentPage, handleError]);
 
-  // データの再取得
+  /**
+   * データの再取得
+   */
   const refreshData = useAsyncCallback(async () => {
     setLoading(true);
+    setError(null);
     await fetchTableAndViewIds();
     await fetchFields();
     await fetchRecordCount();
@@ -104,41 +157,49 @@ const PaginationView: React.FC = () => {
     setLoading(false);
   });
 
-  // ページ変更ハンドラー
-  const handlePageChange = (page: number) => {
+  /**
+   * ページ変更ハンドラー
+   */
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-  };
+  }, []);
 
-  // ページサイズ変更ハンドラー
-  const handlePageSizeChange = (size: number) => {
+  /**
+   * ページサイズ変更ハンドラー
+   */
+  const handlePageSizeChange = useCallback((value: any) => {
+    const size = typeof value === 'string' ? parseInt(value, 10) : value;
     setPageSize(size);
     setCurrentPage(1); // ページサイズが変更されたら1ページ目に戻る
-  };
+  }, []);
 
   // 初期データ取得
   useEffect(() => {
     fetchTableAndViewIds();
-  }, []);
+  }, [fetchTableAndViewIds]);
 
   useEffect(() => {
     if (tableId) {
       fetchFields();
       fetchRecordCount();
     }
-  }, [tableId]);
+  }, [tableId, fetchFields, fetchRecordCount]);
 
   useEffect(() => {
     if (tableId && fields.length > 0) {
       fetchRecords();
     }
-  }, [tableId, fields, currentPage, pageSize]);
+  }, [tableId, fields, currentPage, pageSize, fetchRecords]);
 
-  // テーブル用のカラム設定を生成
+  /**
+   * テーブル用のカラム設定を生成
+   */
   const columns = fields.map(field => ({
     title: field.name,
-    dataIndex: ['fields', field.id],
+    dataIndex: 'fields',
     key: field.id,
-    render: (value: any) => {
+    render: (fieldValues: any) => {
+      const value = fieldValues ? fieldValues[field.id] : null;
       if (value === null || value === undefined) return '-';
       if (typeof value === 'object') return JSON.stringify(value);
       return String(value);
@@ -149,7 +210,7 @@ const PaginationView: React.FC = () => {
   const totalPages = Math.ceil(totalRecords / pageSize);
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div style={{ padding: '20px' }} role="main" aria-label="ページネーションビュー">
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
         <Title heading={3}>ページネーションビュー</Title>
         <Button 
@@ -157,10 +218,17 @@ const PaginationView: React.FC = () => {
           icon={<IconRefresh />}
           onClick={refreshData.execute} 
           loading={refreshData.loading || loading}
+          aria-label="データを更新"
         >
           更新
         </Button>
       </div>
+      
+      {error && (
+        <div role="alert" aria-live="assertive" style={{ color: 'red', marginBottom: '16px' }}>
+          {error}
+        </div>
+      )}
       
       <div className="content-container">
         <Table 
@@ -171,6 +239,7 @@ const PaginationView: React.FC = () => {
           pagination={false} // カスタムページネーションを使用するため無効化
           size="small"
           empty="データがありません"
+          aria-label="レコードテーブル"
         />
       </div>
 
@@ -182,13 +251,16 @@ const PaginationView: React.FC = () => {
             total={totalRecords}
             showTotal={true}
             onPageChange={handlePageChange}
+            aria-label="ページナビゲーション"
           />
           <Space>
-            <span>表示件数:</span>
+            <label htmlFor="page-size-select">表示件数:</label>
             <Select 
+              id="page-size-select"
               value={pageSize} 
               onChange={handlePageSizeChange}
               style={{ width: 80 }}
+              aria-label="ページあたりの表示件数"
             >
               <Option value={5}>5</Option>
               <Option value={10}>10</Option>
