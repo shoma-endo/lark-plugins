@@ -35,19 +35,33 @@ function getPackages() {
   const packagesDir = path.join(process.cwd(), 'packages');
   return fs
     .readdirSync(packagesDir)
-    .filter(dir => {
+    .map(dir => {
       const packagePath = path.join(packagesDir, dir);
+      const packageJsonPath = path.join(packagePath, 'package.json');
+      const packageJson = fs.existsSync(packageJsonPath)
+        ? JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
+        : null;
+      const isIncluded = packageJson?.monorepo?.rootScripts !== false;
+      return {
+        name: dir,
+        path: packagePath,
+        packageJson,
+        isIncluded,
+      };
+    })
+    .filter(pkg => {
       return (
-        fs.statSync(packagePath).isDirectory() &&
-        fs.existsSync(path.join(packagePath, 'package.json'))
+        fs.statSync(pkg.path).isDirectory() &&
+        !!pkg.packageJson &&
+        pkg.isIncluded
       );
     })
-    .map(dir => ({
-      name: dir,
-      path: path.join(packagesDir, dir),
+    .map(pkg => ({
+      name: pkg.name,
+      path: pkg.path,
       hasTests:
-        fs.existsSync(path.join(packagesDir, dir, 'src', '__tests__')) ||
-        fs.existsSync(path.join(packagesDir, dir, 'test')),
+        fs.existsSync(path.join(pkg.path, 'src', '__tests__')) ||
+        fs.existsSync(path.join(pkg.path, 'test')),
     }));
 }
 
