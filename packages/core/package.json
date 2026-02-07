@@ -15,7 +15,7 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@lark-opdev/block-bitable-api": "^0.1.2",
+    "@lark-opdev/block-bitable-api": "^0.1.9",
     "lodash-es": "^4.17.21",
     "zod": "^3.22.4"
   },
