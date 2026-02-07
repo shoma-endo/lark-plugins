@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const rimraf = require('rimraf');
 
 // カラー表示用
 const colors = {
@@ -21,7 +19,13 @@ function getPackages() {
   const packagesDir = path.join(process.cwd(), 'packages');
   return fs
     .readdirSync(packagesDir)
-    .filter(dir => fs.statSync(path.join(packagesDir, dir)).isDirectory())
+    .filter(dir => {
+      const packagePath = path.join(packagesDir, dir);
+      return (
+        fs.statSync(packagePath).isDirectory() &&
+        fs.existsSync(path.join(packagePath, 'package.json'))
+      );
+    })
     .map(dir => ({
       name: dir,
       path: path.join(packagesDir, dir),
@@ -41,7 +45,7 @@ async function clean() {
     
     try {
       if (fs.existsSync(distPath)) {
-        rimraf.sync(distPath);
+        fs.rmSync(distPath, { recursive: true, force: true });
         console.log(`${colors.green}${pkg.name} のdistディレクトリを削除しました。${colors.reset}`);
       } else {
         console.log(`${colors.blue}${pkg.name} にdistディレクトリが見つかりませんでした。${colors.reset}`);

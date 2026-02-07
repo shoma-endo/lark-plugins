@@ -35,7 +35,13 @@ function getPackages() {
   const packagesDir = path.join(process.cwd(), 'packages');
   return fs
     .readdirSync(packagesDir)
-    .filter(dir => fs.statSync(path.join(packagesDir, dir)).isDirectory())
+    .filter(dir => {
+      const packagePath = path.join(packagesDir, dir);
+      return (
+        fs.statSync(packagePath).isDirectory() &&
+        fs.existsSync(path.join(packagePath, 'package.json'))
+      );
+    })
     .map(dir => ({
       name: dir,
       path: path.join(packagesDir, dir),
@@ -45,6 +51,7 @@ function getPackages() {
 // ビルド処理の実行
 async function build() {
   console.log(`${colors.bright}${colors.green}Larkプラグインのビルドを開始します...${colors.reset}\n`);
+  let hasFailure = false;
 
   // 1. まずコアライブラリをビルド
   console.log(`${colors.yellow}コアライブラリをビルドしています...${colors.reset}`);
@@ -62,6 +69,15 @@ async function build() {
   const packages = getPackages().filter(p => p.name !== 'core');
   
   for (const pkg of packages) {
+    const pkgJsonPath = path.join(pkg.path, 'package.json');
+    const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'));
+    const hasBuildScript = pkgJson.scripts && pkgJson.scripts.build;
+
+    if (!hasBuildScript) {
+      console.log(`${colors.blue}${pkg.name}にはbuildスクリプトが定義されていません。スキップします。${colors.reset}\n`);
+      continue;
+    }
+
     console.log(`${colors.yellow}${pkg.name}をビルドしています...${colors.reset}`);
     const success = exec('pnpm run build', pkg.path);
     
@@ -69,7 +85,12 @@ async function build() {
       console.log(`${colors.green}${pkg.name}のビルドが完了しました。${colors.reset}\n`);
     } else {
       console.error(`${colors.red}${pkg.name}のビルドに失敗しました。続行します。${colors.reset}\n`);
+      hasFailure = true;
     }
+  }
+
+  if (hasFailure) {
+    process.exit(1);
   }
 
   console.log(`${colors.bright}${colors.green}ビルドが完了しました！${colors.reset}`);

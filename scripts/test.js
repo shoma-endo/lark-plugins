@@ -35,37 +35,55 @@ function getPackages() {
   const packagesDir = path.join(process.cwd(), 'packages');
   return fs
     .readdirSync(packagesDir)
-    .filter(dir => fs.statSync(path.join(packagesDir, dir)).isDirectory())
+    .filter(dir => {
+      const packagePath = path.join(packagesDir, dir);
+      return (
+        fs.statSync(packagePath).isDirectory() &&
+        fs.existsSync(path.join(packagePath, 'package.json'))
+      );
+    })
     .map(dir => ({
       name: dir,
       path: path.join(packagesDir, dir),
-      hasTests: fs.existsSync(path.join(packagesDir, dir, 'src', '__tests__')),
+      hasTests:
+        fs.existsSync(path.join(packagesDir, dir, 'src', '__tests__')) ||
+        fs.existsSync(path.join(packagesDir, dir, 'test')),
     }));
 }
 
 // テスト処理の実行
 async function test() {
   console.log(`${colors.bright}${colors.green}Larkプラグインのテストを開始します...${colors.reset}\n`);
+  let hasFailure = false;
+  const packages = getPackages();
 
   // Lint実行
   console.log(`${colors.yellow}リントを実行しています...${colors.reset}`);
-  const lintSuccess = exec('eslint packages/*/src --ext .ts,.tsx');
+  const lintTargets = packages
+    .map(pkg => path.join(pkg.path, 'src'))
+    .filter(srcPath => fs.existsSync(srcPath));
+  const lintCommand =
+    lintTargets.length > 0
+      ? `eslint ${lintTargets.join(' ')} --ext .ts,.tsx`
+      : '';
+  const lintSuccess = lintCommand ? exec(lintCommand) : true;
   
   if (!lintSuccess) {
     console.error(`${colors.red}リントでエラーが検出されました。${colors.reset}\n`);
+    hasFailure = true;
   } else {
     console.log(`${colors.green}リントが完了しました。${colors.reset}\n`);
   }
   
   // 各パッケージのテスト実行
-  const packages = getPackages().filter(p => p.hasTests);
+  const testPackages = packages.filter(p => p.hasTests);
   
-  if (packages.length === 0) {
+  if (testPackages.length === 0) {
     console.log(`${colors.blue}テスト可能なパッケージが見つかりませんでした。${colors.reset}`);
     return;
   }
   
-  for (const pkg of packages) {
+  for (const pkg of testPackages) {
     console.log(`${colors.yellow}${pkg.name}のテストを実行しています...${colors.reset}`);
     
     // package.jsonにテストスクリプトが定義されているか確認
@@ -79,10 +97,15 @@ async function test() {
         console.log(`${colors.green}${pkg.name}のテストが成功しました。${colors.reset}\n`);
       } else {
         console.error(`${colors.red}${pkg.name}のテストが失敗しました。続行します。${colors.reset}\n`);
+        hasFailure = true;
       }
     } else {
       console.log(`${colors.blue}${pkg.name}にはテストスクリプトが定義されていません。スキップします。${colors.reset}\n`);
     }
+  }
+
+  if (hasFailure) {
+    process.exit(1);
   }
 
   console.log(`${colors.bright}${colors.green}テストが完了しました！${colors.reset}`);
