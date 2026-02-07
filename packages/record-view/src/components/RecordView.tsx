@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAsyncCallback } from 'react-async-hook';
-import { Form, Button, Typography, Card, Descriptions, Empty, Spin } from '@douyinfe/semi-ui';
+import { Button, Typography, Card, Descriptions, Empty, Spin } from '@douyinfe/semi-ui';
 import { bitable } from '@lark-opdev/block-bitable-api';
 import { Field, Record, getFieldById } from '@lark-plugins/core';
 
@@ -14,7 +14,7 @@ const RecordView: React.FC = () => {
   const [record, setRecord] = useState<Record | null>(null);
 
   // 現在のテーブルとレコードのIDを取得する
-  const fetchTableAndRecordIds = async () => {
+  const fetchTableAndRecordIds = useCallback(async () => {
     setLoading(true);
     try {
       const selection = await bitable.base.getSelection();
@@ -27,10 +27,10 @@ const RecordView: React.FC = () => {
     } catch (error) {
       console.error('テーブル/レコードIDの取得に失敗しました:', error);
     }
-  };
+  }, []);
 
   // フィールド情報を取得する
-  const fetchFields = async () => {
+  const fetchFields = useCallback(async () => {
     if (!tableId) return;
     try {
       const table = await bitable.base.getTableById(tableId);
@@ -39,7 +39,7 @@ const RecordView: React.FC = () => {
       const fieldsData = fieldMetaList.map(field => ({
         id: field.id,
         name: field.name,
-        type: field.type as any,
+        type: field.type as Field['type'],
         property: field.property,
       }));
       
@@ -47,10 +47,10 @@ const RecordView: React.FC = () => {
     } catch (error) {
       console.error('フィールド情報の取得に失敗しました:', error);
     }
-  };
+  }, [tableId]);
 
   // レコードデータを取得する
-  const fetchRecord = async () => {
+  const fetchRecord = useCallback(async () => {
     if (!tableId || !recordId) return;
     try {
       const table = await bitable.base.getTableById(tableId);
@@ -69,7 +69,7 @@ const RecordView: React.FC = () => {
       console.error('レコードデータの取得に失敗しました:', error);
       setLoading(false);
     }
-  };
+  }, [recordId, tableId]);
 
   // データの再取得
   const refreshData = useAsyncCallback(async () => {
@@ -81,38 +81,36 @@ const RecordView: React.FC = () => {
   });
 
   // レコード選択時のイベントリスナー
-  const setupRecordSelectionListener = async () => {
+  const setupRecordSelectionListener = useCallback(async () => {
     try {
       bitable.base.onSelectionChange(async event => {
-        if (event.data.recordId !== recordId) {
-          setRecordId(event.data.recordId || '');
-        }
+        setRecordId(event.data.recordId || '');
       });
     } catch (error) {
       console.error('レコード選択リスナーの設定に失敗しました:', error);
     }
-  };
+  }, []);
 
   // 初期データ取得
   useEffect(() => {
     fetchTableAndRecordIds();
     setupRecordSelectionListener();
-  }, []);
+  }, [fetchTableAndRecordIds, setupRecordSelectionListener]);
 
   useEffect(() => {
     if (tableId) {
       fetchFields();
     }
-  }, [tableId]);
+  }, [tableId, fetchFields]);
 
   useEffect(() => {
     if (tableId && recordId && fields.length > 0) {
       fetchRecord();
     }
-  }, [tableId, recordId, fields]);
+  }, [tableId, recordId, fields, fetchRecord]);
 
   // フィールド値を表示用にフォーマットする
-  const formatFieldValue = (value: any, fieldId: string) => {
+  const formatFieldValue = (value: unknown, fieldId: string) => {
     if (value === null || value === undefined) return '-';
     
     const field = getFieldById(fields, fieldId);

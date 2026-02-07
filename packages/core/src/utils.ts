@@ -55,7 +55,7 @@ export const getChangedFields = (oldRecord: Record, newRecord: Record): string[]
  * @param fieldId フィールドID
  * @returns フィールドの値
  */
-export const getFieldValue = (record: Record, fieldId: string): any => {
+export const getFieldValue = (record: Record, fieldId: string): unknown => {
   return record.fields[fieldId];
 };
 

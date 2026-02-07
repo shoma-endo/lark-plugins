@@ -17,12 +17,13 @@ module.exports = {
   },
   settings: {
     react: {
-      version: 'detect'
+      version: '18.2'
     }
   },
   rules: {
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     'react/prop-types': 'off',
     'react/react-in-jsx-scope': 'off'
   },
