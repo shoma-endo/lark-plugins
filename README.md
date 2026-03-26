@@ -31,8 +31,6 @@ graph TD
     B --> F[table-view/]
     B --> G[record-view/]
     B --> H[action-starter/ automation]
-    B --> I[table-printing/ 予定]
-    B --> J[docs-view/ 予定]
     
     C --> K[eslint-config/]
     C --> L[prettier-config/]
@@ -43,8 +41,8 @@ graph TD
     D --> P[clean.js]
     D --> Q[test.js]
     
-    E --> R[型定義/Zodスキーマ]
-    E --> S[ユーティリティ関数]
+    E --> R[型定義]
+    E --> S[フィールドユーティリティ]
     
     F --> T[テーブルビュー機能]
     G --> U[レコードビュー機能]
@@ -58,8 +56,6 @@ graph TD
   - `table-view/`: テーブルビュープラグイン
   - `record-view/`: レコードビュープラグイン
   - `action-starter/`: Base オートメーションプラグイン
-  - `table-printing/`: テーブル印刷プラグイン（予定）
-  - `docs-view/`: ドキュメントビュープラグイン（予定）
 
 - `configs/`: 共通設定ファイル
   - `eslint-config/`: ESLint設定
@@ -99,8 +95,6 @@ graph TD
 - **API クライアント**: @lark-opdev/block-bitable-api
 - **Base オートメーション SDK**: @lark-opdev/block-basekit-server-api
 - **Base オートメーション CLI**: @lark-opdev/block-basekit-cli
-- **スキーマ検証**: Zod
-- **ユーティリティ**: lodash-es
 
 ## 4. 主要コンポーネントとその機能
 
@@ -108,14 +102,11 @@ graph TD
 
 共通の型定義とユーティリティ関数を提供します。
 
-- **型定義**: Zod スキーマによる堅牢な型システム
-  - プラグイン設定
-  - フィールド・ビュー・レコードの型定義
-  - イベント型定義
+- **型定義**:
+  - フィールド型
+  - レコード型
 - **ユーティリティ関数**:
-  - フィールド操作関数
-  - レコード操作関数
-  - 文字列変換関数
+  - フィールドIDからの取得関数
 
 ### テーブルビュープラグイン (@lark-plugins/table-view)
 
@@ -270,7 +261,6 @@ pnpm exec opdev upload ./output -t block -v 1.0.4 -d "localize plugin texts to J
 - [Docs Add-on Introduction](https://open.larksuite.com/document/uAjLw4CM/uYjL24iN/docs-add-on/docs-add-on-introduction)
 - [pnpm Workspaces](https://pnpm.io/workspaces)
 - [TypeScript ドキュメント](https://www.typescriptlang.org/docs/)
-- [Zod ドキュメント](https://zod.dev/)
 
 ---
 

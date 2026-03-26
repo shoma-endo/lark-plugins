@@ -14,16 +14,11 @@
     "lint": "eslint src --ext .ts,.tsx",
     "clean": "rimraf dist"
   },
-  "dependencies": {
-    "@lark-opdev/block-bitable-api": "^0.1.9",
-    "lodash-es": "^4.17.21",
-    "zod": "^3.22.4"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@lark-plugins/eslint-config": "workspace:*",
     "@lark-plugins/prettier-config": "workspace:*",
     "@lark-plugins/tsconfig-base": "workspace:*",
-    "@types/lodash-es": "^4.17.9",
     "eslint": "^8.56.0",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.5",
