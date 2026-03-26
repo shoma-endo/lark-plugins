@@ -1,6 +1,6 @@
 # Lark Base プラグイン開発: できること / できないこと整理
 
-最終更新: 2026-02-07  
+最終更新: 2026-03-26  
 前提SDK: `@lark-opdev/block-bitable-api@0.1.9`
 
 ---
@@ -13,6 +13,9 @@ Lark Base（Bitable）向けプラグイン開発時に、実装前に判断す�
 - 何を更新できるか
 - 何が制限されるか（権限・型・件数・サイズ）
 - 実装で先に確認すべきこと
+
+このドキュメントは主に `@lark-opdev/block-bitable-api` を使うフロントエンド系 Base プラグインを対象にしています。  
+`packages/action-starter` のような Base オートメーションプラグインは `@lark-opdev/block-basekit-server-api` を使うため、UI 構成や実行モデルは一部異なります。
 
 ---
 
@@ -32,6 +35,11 @@ API呼び出し可能でも、実行可否は権限で決まる。
 
 同じ `setCellValue` / `setRecord` でも、フィールド型によっては更新不可。  
 （例: 作成日時・更新日時・作成者・更新者・数式・ルックアップ(参照) など）
+
+### 2.4 オートメーションプラグインでは OpenAPI 実装も前提になる
+
+Base オートメーションプラグインでは、SDK の `execute(args, context)` から `context.fetch` と `tenantAccessToken` を使って OpenAPI を呼ぶ実装が実務上必要になる。  
+特にレコード検索・一括削除・外部連携は OpenAPI ベースで組む前提で設計したほうがよい。
 
 ---
 
@@ -191,6 +199,8 @@ SDK型定義コメント上、`register*Event` は「同一eventにつき client
 - `table-view` / `record-view` の更新系処理追加時は、必ず権限チェックを先行する
 - フィールド型ごとの `setCellValue` バリデーション関数を共通化する
 - 将来のSDK更新時は、このドキュメントの「制限」章を先に差分確認する
+- `packages/action-starter` はフロントエンド系プラグインではなく Base オートメーションプラグインとして扱う
+- `packages/action-starter` のアップロードは `pnpm exec opdev upload ./output -t block ...` を使う
 
 ---
 

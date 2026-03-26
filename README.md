@@ -10,7 +10,14 @@ Larkは多機能なコラボレーションプラットフォームですが、�
 
 ### 現状
 
-現在、テーブルビューとレコードビューの2つのプラグインが実装されており、今後テーブル印刷やドキュメントビューなどのプラグインを追加予定です。モノレポへの移行が完了し、開発環境が整備された状態です。
+現在、このリポジトリには以下のプラグイン/パッケージがあります。
+
+- `packages/table-view`: テーブルビュー系プラグイン
+- `packages/record-view`: レコードビュー系プラグイン
+- `packages/action-starter`: Base オートメーション用のレコード削除アクション
+- `packages/core`: 共通ライブラリ
+
+モノレポ構成への移行は完了しており、フロントエンド系プラグインと Base オートメーションプラグインを同一リポジトリで管理しています。
 
 ## 2. プロジェクト構造
 
@@ -23,23 +30,25 @@ graph TD
     B --> E[core/]
     B --> F[table-view/]
     B --> G[record-view/]
-    B --> H[table-printing/ 予定]
-    B --> I[docs-view/ 予定]
+    B --> H[action-starter/ automation]
+    B --> I[table-printing/ 予定]
+    B --> J[docs-view/ 予定]
     
-    C --> J[eslint-config/]
-    C --> K[prettier-config/]
-    C --> L[tsconfig-base/]
-    C --> M[webpack-config/]
+    C --> K[eslint-config/]
+    C --> L[prettier-config/]
+    C --> M[tsconfig-base/]
+    C --> N[webpack-config/]
     
-    D --> N[build.js]
-    D --> O[clean.js]
-    D --> P[test.js]
+    D --> O[build.js]
+    D --> P[clean.js]
+    D --> Q[test.js]
     
-    E --> Q[型定義/Zodスキーマ]
-    E --> R[ユーティリティ関数]
+    E --> R[型定義/Zodスキーマ]
+    E --> S[ユーティリティ関数]
     
-    F --> S[テーブルビュー機能]
-    G --> T[レコードビュー機能]
+    F --> T[テーブルビュー機能]
+    G --> U[レコードビュー機能]
+    H --> V[Base automation 機能]
 ```
 
 ### ディレクトリ構成
@@ -48,6 +57,7 @@ graph TD
   - `core/`: 共通コアライブラリ（型定義、ユーティリティ関数）
   - `table-view/`: テーブルビュープラグイン
   - `record-view/`: レコードビュープラグイン
+  - `action-starter/`: Base オートメーションプラグイン
   - `table-printing/`: テーブル印刷プラグイン（予定）
   - `docs-view/`: ドキュメントビュープラグイン（予定）
 
@@ -87,6 +97,8 @@ graph TD
 ### API・データ処理
 
 - **API クライアント**: @lark-opdev/block-bitable-api
+- **Base オートメーション SDK**: @lark-opdev/block-basekit-server-api
+- **Base オートメーション CLI**: @lark-opdev/block-basekit-cli
 - **スキーマ検証**: Zod
 - **ユーティリティ**: lodash-es
 
@@ -123,6 +135,15 @@ Larkの個別レコードをカスタムビューで表示します。
 - レコード詳細表示
 - レコード選択変更検知
 
+### Base オートメーションプラグイン (`packages/action-starter`)
+
+Base の自動化ステップとして動作するプラグインです。
+
+- 単一レコードの削除
+- トリガー元レコードの削除
+- フィルタ条件に一致する複数レコードの一括削除
+- 削除上限件数による安全制御
+
 ## 5. 開発プロセス
 
 ### 環境セットアップ
@@ -158,6 +179,11 @@ pnpm run dev
 cd packages/<plugin-name>
 pnpm run upload
 ```
+
+注意:
+
+- この手順は主にフロントエンド系プラグイン向けです。
+- `packages/action-starter` のような Base オートメーションプラグインは、下の専用手順を使ってください。
 
 ### Base オートメーションプラグインのアップロード手順
 
@@ -224,16 +250,24 @@ pnpm exec opdev upload ./output -t block -v 1.0.4 -d "localize plugin texts to J
 - **依存関係エラー**: `pnpm install` で依存関係を更新
 - **Webpackの設定問題**: 各パッケージの `config/webpack.config.js` で個別に設定を上書き
 
-## 8. 将来の展望
+## 8. ドキュメント運用メモ
+
+- `packages/action-starter` は `monorepo.rootScripts: false` のため、ルートの `pnpm run test` / `pnpm run build` の対象外です。
+- Base オートメーションプラグインの確認は `cd packages/action-starter && pnpm run test && pnpm run build` を個別に実行します。
+- `packages/action-starter/output/` はアップロードや preview 実行で生成される成果物です。
+
+## 9. 将来の展望
 
 - テーブル印刷プラグインの実装
 - ドキュメントビュープラグインの実装
 - CI/CDパイプラインの構築
 - テストカバレッジの向上
 
-## 9. 参考資料・リンク
+## 10. 参考資料・リンク
 
 - [Lark 開発者ドキュメント](https://www.larksuite.com/en_us/developer/docs)
+- [Base Extension Introduction](https://open.larksuite.com/document/uAjLw4CM/uYjL24iN/base-extensions/base-extension-introduction)
+- [Docs Add-on Introduction](https://open.larksuite.com/document/uAjLw4CM/uYjL24iN/docs-add-on/docs-add-on-introduction)
 - [pnpm Workspaces](https://pnpm.io/workspaces)
 - [TypeScript ドキュメント](https://www.typescriptlang.org/docs/)
 - [Zod ドキュメント](https://zod.dev/)
