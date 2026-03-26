@@ -8,6 +8,7 @@
     "configs/*"
   ],
   "scripts": {
+    "postinstall": "node scripts/fix-lark-cli-deps.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js",
     "lint": "eslint .",

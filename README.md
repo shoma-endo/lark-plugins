@@ -159,6 +159,48 @@ cd packages/<plugin-name>
 pnpm run upload
 ```
 
+### Base オートメーションプラグインのアップロード手順
+
+このリポジトリでは Base オートメーションプラグインとして `packages/action-starter` を利用します。
+
+通常の `pnpm run upload` は `block-basekit-cli` 内部で `npx opdev` を呼ぶため、環境によっては失敗します。現状の安定手順は以下です。
+
+```bash
+# 1. 依存関係をインストール
+pnpm install
+
+# 2. オートメーションプラグインのディレクトリへ移動
+cd packages/action-starter
+
+# 3. テスト
+pnpm run test
+
+# 4. ビルド
+pnpm run build
+
+# 5. Lark CLI にログイン
+pnpm exec opdev login
+
+# 6. ログイン状態の確認
+pnpm exec opdev whoami
+
+# 7. アップロード
+pnpm exec opdev upload ./output -t block -v <version> -d "<description>"
+```
+
+例:
+
+```bash
+pnpm exec opdev upload ./output -t block -v 1.0.4 -d "localize plugin texts to Japanese"
+```
+
+補足:
+
+- `packages/action-starter/block.json` の `blockTypeID` がアップロード先の拡張を決定します。
+- `pnpm run preview` は CLI 側の不整合で失敗することがあり、`upload` のほうが安定しています。
+- ルートの `postinstall` で `@lark-opdev/cli` の依存復旧スクリプトを実行しています。`pnpm install` 後に自動で適用されます。
+- アップロード後の設定画面は `https://open.larksuite.com/apps/cli_a701fc61a7b8d02d/blocks/` です。
+
 ## 6. モノレポの利点と運用上の注意点
 
 ### 利点
