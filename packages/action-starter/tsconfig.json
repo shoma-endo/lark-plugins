@@ -1,0 +1,16 @@
+{
+  "extends": "../../configs/tsconfig-base/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "module": "commonjs",
+    "declaration": false,
+    "sourceMap": false,
+    "inlineSourceMap": true,
+    "allowJs": true,
+    "checkJs": true,
+    "lib": ["ES2020"]
+  },
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
