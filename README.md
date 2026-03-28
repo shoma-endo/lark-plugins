@@ -14,7 +14,7 @@ Larkは多機能なコラボレーションプラットフォームですが、�
 
 - `packages/table-view`: テーブルビュー系プラグイン
 - `packages/record-view`: レコードビュー系プラグイン
-- `packages/action-starter`: Base オートメーション用のレコード削除アクション
+- `packages/action-delete-record`: Base オートメーション用のレコード削除アクション
 - `packages/core`: 共通ライブラリ
 
 モノレポ構成への移行は完了しており、フロントエンド系プラグインと Base オートメーションプラグインを同一リポジトリで管理しています。
@@ -30,7 +30,7 @@ graph TD
     B --> E[core/]
     B --> F[table-view/]
     B --> G[record-view/]
-    B --> H[action-starter/ automation]
+    B --> H[action-delete-record/ automation]
     
     C --> K[eslint-config/]
     C --> L[prettier-config/]
@@ -55,7 +55,7 @@ graph TD
   - `core/`: 共通コアライブラリ（型定義、ユーティリティ関数）
   - `table-view/`: テーブルビュープラグイン
   - `record-view/`: レコードビュープラグイン
-  - `action-starter/`: Base オートメーションプラグイン
+  - `action-delete-record/`: Base オートメーションプラグイン
 
 - `configs/`: 共通設定ファイル
   - `eslint-config/`: ESLint設定
@@ -126,7 +126,7 @@ Larkの個別レコードをカスタムビューで表示します。
 - レコード詳細表示
 - レコード選択変更検知
 
-### Base オートメーションプラグイン (`packages/action-starter`)
+### Base オートメーションプラグイン (`packages/action-delete-record`)
 
 Base の自動化ステップとして動作するプラグインです。
 
@@ -174,11 +174,11 @@ pnpm run upload
 注意:
 
 - この手順は主にフロントエンド系プラグイン向けです。
-- `packages/action-starter` のような Base オートメーションプラグインは、下の専用手順を使ってください。
+- `packages/action-delete-record` のような Base オートメーションプラグインは、下の専用手順を使ってください。
 
 ### Base オートメーションプラグインのアップロード手順
 
-このリポジトリでは Base オートメーションプラグインとして `packages/action-starter` を利用します。
+このリポジトリでは Base オートメーションプラグインとして `packages/action-delete-record` を利用します。
 
 通常の `pnpm run upload` は `block-basekit-cli` 内部で `npx opdev` を呼ぶため、環境によっては失敗します。現状の安定手順は以下です。
 
@@ -187,7 +187,7 @@ pnpm run upload
 pnpm install
 
 # 2. オートメーションプラグインのディレクトリへ移動
-cd packages/action-starter
+cd packages/action-delete-record
 
 # 3. テスト
 pnpm run test
@@ -213,7 +213,9 @@ pnpm exec opdev upload ./output -t block -v 1.0.4 -d "localize plugin texts to J
 
 補足:
 
-- `packages/action-starter/block.json` の `blockTypeID` がアップロード先の拡張を決定します。
+- `pnpm run test` / `pnpm run build` / `pnpm run preview` / `pnpm run upload` の前に、ルートの `app.json` を `packages/app.json` へ自動同期します。
+- `packages/app.json` は Base オートメーション CLI / SDK 向けのローカル生成ファイルです。ルートの `app.json` を元に毎回再生成され、Git では追跡しません。
+- `packages/action-delete-record/block.json` の `blockTypeID` がアップロード先の拡張を決定します。
 - `pnpm run preview` は CLI 側の不整合で失敗することがあり、`upload` のほうが安定しています。
 - ルートの `postinstall` で `@lark-opdev/cli` の依存復旧スクリプトを実行しています。`pnpm install` 後に自動で適用されます。
 - アップロード後の設定画面は `https://open.larksuite.com/apps/cli_a701fc61a7b8d02d/blocks/` です。
@@ -243,9 +245,9 @@ pnpm exec opdev upload ./output -t block -v 1.0.4 -d "localize plugin texts to J
 
 ## 8. ドキュメント運用メモ
 
-- `packages/action-starter` は `monorepo.rootScripts: false` のため、ルートの `pnpm run test` / `pnpm run build` の対象外です。
-- Base オートメーションプラグインの確認は `cd packages/action-starter && pnpm run test && pnpm run build` を個別に実行します。
-- `packages/action-starter/output/` はアップロードや preview 実行で生成される成果物です。
+- `packages/action-delete-record` は `monorepo.rootScripts: false` のため、ルートの `pnpm run test` / `pnpm run build` の対象外です。
+- Base オートメーションプラグインの確認は `cd packages/action-delete-record && pnpm run test && pnpm run build` を個別に実行します。
+- `packages/action-delete-record/output/` はアップロードや preview 実行で生成される成果物です。
 
 ## 9. 将来の展望
 

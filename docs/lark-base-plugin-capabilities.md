@@ -15,7 +15,7 @@ Lark Base（Bitable）向けプラグイン開発時に、実装前に判断す�
 - 実装で先に確認すべきこと
 
 このドキュメントは主に `@lark-opdev/block-bitable-api` を使うフロントエンド系 Base プラグインを対象にしています。  
-`packages/action-starter` のような Base オートメーションプラグインは `@lark-opdev/block-basekit-server-api` を使うため、UI 構成や実行モデルは一部異なります。
+`packages/action-delete-record` のような Base オートメーションプラグインは `@lark-opdev/block-basekit-server-api` を使うため、UI 構成や実行モデルは一部異なります。
 
 ---
 
@@ -199,8 +199,8 @@ SDK型定義コメント上、`register*Event` は「同一eventにつき client
 - `table-view` / `record-view` の更新系処理追加時は、必ず権限チェックを先行する
 - フィールド型ごとの `setCellValue` バリデーション関数を共通化する
 - 将来のSDK更新時は、このドキュメントの「制限」章を先に差分確認する
-- `packages/action-starter` はフロントエンド系プラグインではなく Base オートメーションプラグインとして扱う
-- `packages/action-starter` のアップロードは `pnpm exec opdev upload ./output -t block ...` を使う
+- `packages/action-delete-record` はフロントエンド系プラグインではなく Base オートメーションプラグインとして扱う
+- `packages/action-delete-record` のアップロードは `pnpm exec opdev upload ./output -t block ...` を使う
 
 ---
 

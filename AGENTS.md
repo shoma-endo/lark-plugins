@@ -22,7 +22,7 @@
 - `scripts/build.js`, `scripts/test.js`, `scripts/clean.js` は以下を満たす package のみ対象:
   - `packages/<name>/package.json` が存在
   - `package.json` 内で `monorepo.rootScripts !== false`
-- `packages/action-starter` は `monorepo.rootScripts: false` で除外されている。
+- `packages/action-delete-record` は `monorepo.rootScripts: false` で除外されている。
 
 ## lint / TypeScript 運用
 
